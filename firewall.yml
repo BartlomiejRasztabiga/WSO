@@ -1,0 +1,16 @@
+- name: Konfiguracja firewalla wewnątrz VM
+  hosts: vms
+  become: true
+
+  tasks:
+    - name: Resetuj reguły
+      command: iptables -F
+
+    - name: Zezwól na ruch lokalny
+      command: iptables -A INPUT -i lo -j ACCEPT
+
+    - name: Zezwól na port 80
+      command: iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+
+    - name: Odrzuć wszystko inne
+      command: iptables -A INPUT -j DROP

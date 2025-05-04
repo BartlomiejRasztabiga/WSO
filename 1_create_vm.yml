@@ -1,0 +1,31 @@
+- name: Tworzenie VM z klasycznym ISO (bez cloud-init)
+  hosts: kvmhost
+  become: true
+  vars:
+    vm_name: http-vm
+    vm_memory: 1024
+    vm_vcpus: 1
+    vm_disk: /var/lib/libvirt/images/http-vm.qcow2
+    vm_iso: /var/lib/libvirt/images/ubuntu-22.04.iso
+    network: nat-net
+
+  tasks:
+    - name: Stwórz dysk qcow2
+      command: qemu-img create -f qcow2 {{ vm_disk }} 10G
+      args:
+        creates: "{{ vm_disk }}"
+
+    - name: Utwórz maszynę wirtualną z ISO
+      command: >
+        virt-install
+          --name {{ vm_name }}
+          --memory {{ vm_memory }}
+          --vcpus {{ vm_vcpus }}
+          --disk path={{ vm_disk }},format=qcow2
+          --cdrom {{ vm_iso }}
+          --network network={{ network }},model=virtio
+          --os-type linux --os-variant ubuntu22.04
+          --graphics none
+          --noautoconsole
+      args:
+        creates: "/etc/libvirt/qemu/{{ vm_name }}.xml"
