@@ -1,46 +1,64 @@
 - name: Ensure base image is downloaded
   get_url:
-    url: "{{ vm_image_url }}"
-    dest: "{{ vm_base_image }}"
+    url: "{{ item.image_url }}"
+    dest: "{{ item.base_image }}"
     mode: '0644'
-  when: not vm_base_image is exists
+  when: not item.base_image is exists
+  loop: "{{ vms }}"
+  loop_control:
+    label: "{{ item.name }}"
 
 - name: Create VM disk from base image
   command: >
-    qemu-img create -f qcow2 -F qcow2 -b {{ vm_base_image }} {{ vm_disk }}
+    qemu-img create -f qcow2 -F qcow2 -b {{ item.base_image }} {{ item.disk }}
   args:
-    creates: "{{ vm_disk }}"
+    creates: "{{ item.disk }}"
+  loop: "{{ vms }}"
+  loop_control:
+    label: "{{ item.name }}"
 
 - name: Render user-data
   template:
     src: user-data
-    dest: "/tmp/{{ vm_name }}-user-data"
+    dest: "/tmp/{{ item.name }}-user-data"
+  loop: "{{ vms }}"
+  loop_control:
+    label: "{{ item.name }}"
 
 - name: Render meta-data
   template:
     src: meta-data
-    dest: "/tmp/{{ vm_name }}-meta-data"
+    dest: "/tmp/{{ item.name }}-meta-data"
+  loop: "{{ vms }}"
+  loop_control:
+    label: "{{ item.name }}"
 
 - name: Create cloud-init ISO
   command: >
-    cloud-localds -v {{ vm_ci_iso }}
-    /tmp/{{ vm_name }}-user-data
-    /tmp/{{ vm_name }}-meta-data
+    cloud-localds -v {{ item.ci_iso }}
+    /tmp/{{ item.name }}-user-data
+    /tmp/{{ item.name }}-meta-data
   args:
-    creates: "{{ vm_ci_iso }}"
+    creates: "{{ item.ci_iso }}"
+  loop: "{{ vms }}"
+  loop_control:
+    label: "{{ item.name }}"
 
 - name: Create and start VM via virt-install
   command: >
     virt-install
-    --name={{ vm_name }}
-    --memory={{ vm_memory }}
-    --vcpus={{ vm_vcpus }}
-    --disk path={{ vm_disk }},format=qcow2
-    --disk path={{ vm_ci_iso }},device=cdrom
-    --network network={{ vm_network }}
-    --os-variant={{ vm_os_variant }}
+    --name={{ item.name }}
+    --memory={{ item.memory }}
+    --vcpus={{ item.vcpus }}
+    --disk path={{ item.disk }},format=qcow2
+    --disk path={{ item.ci_iso }},device=cdrom
+    --network network={{ item.network }}
+    --os-variant={{ item.os_variant }}
     --graphics none
     --import
     --noautoconsole
   args:
-    creates: "/etc/libvirt/qemu/{{ vm_name }}.xml"
+    creates: "/etc/libvirt/qemu/{{ item.name }}.xml"
+  loop: "{{ vms }}"
+  loop_control:
+    label: "{{ item.name }}"

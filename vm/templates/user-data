@@ -1,9 +1,9 @@
 #cloud-config
-hostname: {{ vm_name }}
+hostname: {{ item.name }}
 users:
   - name: ubuntu
     groups: sudo
     shell: /bin/bash
     sudo: ['ALL=(ALL) NOPASSWD:ALL']
     ssh_authorized_keys:
-      - {{ ssh_public_key }}
+      - {{ item.ssh_public_key }}
