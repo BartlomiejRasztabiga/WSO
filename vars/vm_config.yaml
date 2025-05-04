@@ -1,0 +1,10 @@
+vm_name: test-vm
+vm_memory: 2048
+vm_vcpus: 2
+vm_disk: /var/lib/libvirt/images/test-vm.qcow2
+vm_base_image: /var/lib/libvirt/images/ubuntu-jammy-base.qcow2
+vm_image_url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img
+vm_ci_iso: /var/lib/libvirt/images/test-vm-seed.iso
+vm_network: default
+vm_os_variant: ubuntu22.04
+ssh_public_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"

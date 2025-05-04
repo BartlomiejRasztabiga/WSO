@@ -1,0 +1,6 @@
+[local]
+localhost ansible_connection=local
+# BEGIN DYNAMIC INVENTORY FOR VM test-vm
+[dynamic_vms]
+test-vm ansible_host=192.168.122.81 ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+# END DYNAMIC INVENTORY FOR VM test-vm
