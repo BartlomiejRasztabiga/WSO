@@ -57,22 +57,6 @@
         ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
         groups: dynamic_vms
 
-    - name: Dopisz vm1 do inventory/hosts
-      blockinfile:
-        path: "{{ playbook_dir }}/../inventory/hosts"
-        marker: "# {mark} DYNAMIC INVENTORY FOR {{ vm1_name }}"
-        block: |
-          [dynamic_vms]
-          {{ vm1_name }} ansible_host={{ vm1_ip_result.stdout }} ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
-
-    - name: Dopisz vm2 do inventory/hosts
-      blockinfile:
-        path: "{{ playbook_dir }}/../inventory/hosts"
-        marker: "# {mark} DYNAMIC INVENTORY FOR {{ vm2_name }}"
-        block: |
-          [dynamic_vms]
-          {{ vm2_name }} ansible_host={{ vm2_ip_result.stdout }} ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
-
 - name: "Provisioning: test dostepnosci i test komunikacji"
   hosts: dynamic_vms
   become: true

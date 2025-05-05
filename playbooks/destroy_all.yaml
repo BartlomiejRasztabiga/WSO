@@ -44,3 +44,11 @@
         state: absent
       loop: "{{ vms.stdout_lines }}"
       ignore_errors: true
+
+    - name: Usuń sieci
+      shell: |
+        virsh net-destroy {{ item }} || true
+        virsh net-undefine {{ item }} || true
+      loop:
+        - nat0
+        - br0

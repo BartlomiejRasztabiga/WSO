@@ -20,3 +20,4 @@ ssh_public_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
 external_test_ip: 192.168.0.1
 
 network_mode: bridge
+bridge_host_ip: 192.168.0.19

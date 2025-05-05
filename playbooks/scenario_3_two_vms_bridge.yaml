@@ -25,21 +25,27 @@
         vm_disk: "{{ vm2_disk }}"
         vm_ci_iso: "{{ vm2_ci_iso }}"
 
-    - name: Pobierz IP vm1
-      shell: virsh domifaddr {{ vm1_name }} | grep -oP '(\d{1,3}\.){3}\d{1,3}' | head -n1
-      register: vm1_ip_result
-      retries: 10
-      delay: 3
-      until: vm1_ip_result.stdout != ""
-      changed_when: false
+    - name: Pobierz MAC adres VM1
+      shell: virsh dumpxml {{ vm1_name }} | grep "mac address" | head -n1 | grep -oP '([0-9a-f]{2}:){5}[0-9a-f]{2}'
+      register: vm1_mac
 
-    - name: Pobierz IP vm2
-      shell: virsh domifaddr {{ vm2_name }} | grep -oP '(\d{1,3}\.){3}\d{1,3}' | head -n1
+    - name: Pobierz MAC adres VM2
+      shell: virsh dumpxml {{ vm2_name }} | grep "mac address" | head -n1 | grep -oP '([0-9a-f]{2}:){5}[0-9a-f]{2}'
+      register: vm2_mac
+
+    - name: Czekaj aż VM1 pojawi się w tablicy ARP
+      shell: ip neigh | grep "{{ vm1_mac.stdout }}" | grep -oP '(\d{1,3}\.){3}\d{1,3}'
+      register: vm1_ip_result
+      retries: 15
+      delay: 5
+      until: vm1_ip_result.stdout != ""
+
+    - name: Czekaj aż VM2 pojawi się w tablicy ARP
+      shell: ip neigh | grep "{{ vm2_mac.stdout }}" | grep -oP '(\d{1,3}\.){3}\d{1,3}'
       register: vm2_ip_result
-      retries: 10
-      delay: 3
+      retries: 15
+      delay: 5
       until: vm2_ip_result.stdout != ""
-      changed_when: false
 
     - name: Dodaj vm1 do inventory
       add_host:
@@ -118,3 +124,41 @@
     - name: Debug ping do LAN (powinien działać)
       debug:
         var: external_ping.stdout_lines
+
+- name: Walidacja adresu i pingowanie VM z hosta
+  hosts: localhost
+  become: true
+  vars_files:
+    - ../vars/scenario_3.yaml
+  tasks:
+    - name: "Asercja: vm1 ma IP z podsieci 192.168.0.x"
+      assert:
+        that:
+          - "'192.168.0.' in hostvars[vm1_name].ansible_host"
+        fail_msg: "vm1 nie ma IP z sieci LAN"
+        success_msg: "vm1 ma poprawny adres LAN: {{ hostvars[vm1_name].ansible_host }}"
+
+    - name: "Asercja: vm2 ma IP z podsieci 192.168.0.x"
+      assert:
+        that:
+          - "'192.168.0.' in hostvars[vm2_name].ansible_host"
+        fail_msg: "vm2 nie ma IP z sieci LAN"
+        success_msg: "vm2 ma poprawny adres LAN: {{ hostvars[vm2_name].ansible_host }}"
+
+    - name: Test ping z hosta do vm1
+      shell: ping -c 2 {{ hostvars[vm1_name].ansible_host }}
+      register: ping_vm1
+      failed_when: ping_vm1.rc != 0
+
+    - name: Debug wynik pinga do vm1
+      debug:
+        var: ping_vm1.stdout_lines
+
+    - name: Test ping z hosta do vm2
+      shell: ping -c 2 {{ hostvars[vm2_name].ansible_host }}
+      register: ping_vm2
+      failed_when: ping_vm2.rc != 0
+
+    - name: Debug wynik pinga do vm2
+      debug:
+        var: ping_vm2.stdout_lines

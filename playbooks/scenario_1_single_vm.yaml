@@ -11,7 +11,7 @@
       register: vm_ip_result
       retries: 10
       delay: 3
-      until: vm2_ip_result.stdout != ""
+      until: vm_ip_result.stdout != ""
       changed_when: false
 
     - name: Dodaj VM dynamicznie do inventory
@@ -21,14 +21,6 @@
         ansible_user: ubuntu
         ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
         groups: dynamic_vms
-
-    # - name: Dopisz VM do inventory/hosts
-    #   blockinfile:
-    #     path: "{{ playbook_dir }}/../inventory/hosts"
-    #     marker: "# {mark} DYNAMIC INVENTORY FOR {{ vm_name }}"
-    #     block: |
-    #       [dynamic_vms]
-    #       {{ vm_name }} ansible_host={{ vm_ip_result.stdout }} ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 
 - name: "Provisioning: test dostępności i internetu"
   hosts: dynamic_vms

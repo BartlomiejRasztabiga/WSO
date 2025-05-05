@@ -1,0 +1,1 @@
+ansible-playbook -i inventory/hosts playbooks/destroy_all.yaml --ask-become-pass

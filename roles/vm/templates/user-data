@@ -12,3 +12,7 @@ users:
     lock_passwd: false
     passwd: "{{ 'ubuntu' | password_hash('sha512') }}"
 chpasswd:
+  expire: false
+runcmd:
+  - timeout 30s bash -c "while true; do ping -c 1 {{bridge_host_ip}} || true; sleep 1; done"
+
