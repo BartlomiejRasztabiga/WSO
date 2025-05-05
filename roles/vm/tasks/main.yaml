@@ -1,24 +1,39 @@
+- name: Sprawdź czy VM już istnieje
+  command: virsh dominfo {{ vm_name }}
+  register: vm_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Pomiń tworzenie VM — już istnieje
+  debug:
+    msg: "VM {{ vm_name }} już istnieje – pomijam tworzenie."
+  when: vm_check.rc == 0
+
 - name: Ensure base image is downloaded
   get_url:
     url: "{{ vm_image_url }}"
     dest: "{{ vm_base_image }}"
     mode: '0644'
+  when: vm_check.rc != 0
 
 - name: Create VM disk from base image
   command: >
     qemu-img create -f qcow2 -F qcow2 -b {{ vm_base_image }} {{ vm_disk }}
   args:
     creates: "{{ vm_disk }}"
+  when: vm_check.rc != 0
 
 - name: Render user-data
   template:
     src: user-data
     dest: "/tmp/{{ vm_name }}-user-data"
+  when: vm_check.rc != 0
 
 - name: Render meta-data
   template:
     src: meta-data
     dest: "/tmp/{{ vm_name }}-meta-data"
+  when: vm_check.rc != 0
 
 - name: Create cloud-init ISO
   command: >
@@ -27,6 +42,7 @@
     /tmp/{{ vm_name }}-meta-data
   args:
     creates: "{{ vm_ci_iso }}"
+  when: vm_check.rc != 0
 
 - name: Create and start VM via virt-install
   command: >
@@ -43,3 +59,4 @@
     --noautoconsole
   args:
     creates: "/etc/libvirt/qemu/{{ vm_name }}.xml"
+  when: vm_check.rc != 0

@@ -1,36 +1,14 @@
----
-- name: Scenariusz 2: Tworzenie dwóch VM w NAT
+- name: "Scenariusz 2: Tworzenie dwóch VM w NAT"
   hosts: localhost
   become: true
   vars_files:
     - ../vars/scenario_2.yaml
 
   tasks:
-    - name: Sprawdź czy sieć {{ vm_network }} już istnieje
-      shell: virsh net-info {{ vm_network }}
-      register: net_check
-      ignore_errors: true
-      changed_when: false
+    - name: Tworzenie sieci NAT (rola network)
+      include_role:
+        name: network
 
-    - name: Zatrzymaj i usuń istniejącą sieć {{ vm_network }}
-      shell: |
-        virsh net-destroy {{ vm_network }} && virsh net-undefine {{ vm_network }}
-      when: net_check.rc == 0
-      ignore_errors: true
-
-    - name: Wygeneruj XML sieci NAT
-      template:
-        src: network-nat.xml.j2
-        dest: "/tmp/{{ vm_network }}.xml"
-
-    - name: Zdefiniuj nową sieć NAT
-      command: virsh net-define /tmp/{{ vm_network }}.xml
-
-    - name: Włącz autostart sieci
-      command: virsh net-autostart {{ vm_network }}
-
-    - name: Uruchom sieć
-      command: virsh net-start {{ vm_network }}
     - name: Utwórz vm1
       include_role:
         name: vm
@@ -50,11 +28,17 @@
     - name: Pobierz IP vm1
       shell: virsh domifaddr {{ vm1_name }} | grep -oP '(\d{1,3}\.){3}\d{1,3}' | head -n1
       register: vm1_ip_result
+      retries: 10
+      delay: 3
+      until: vm1_ip_result.stdout != ""
       changed_when: false
 
     - name: Pobierz IP vm2
       shell: virsh domifaddr {{ vm2_name }} | grep -oP '(\d{1,3}\.){3}\d{1,3}' | head -n1
       register: vm2_ip_result
+      retries: 10
+      delay: 3
+      until: vm2_ip_result.stdout != ""
       changed_when: false
 
     - name: Dodaj vm1 do inventory
@@ -89,9 +73,12 @@
           [dynamic_vms]
           {{ vm2_name }} ansible_host={{ vm2_ip_result.stdout }} ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 
-- name: Provisioning i test komunikacji
+- name: "Provisioning: test dostepnosci i test komunikacji"
   hosts: dynamic_vms
   become: true
+  vars_files:
+    - ../vars/scenario_2.yaml
+
   tasks:
     - name: Ping test do localhost (czy SSH działa)
       ping:
@@ -100,19 +87,27 @@
       command: hostname
       register: hostname_out
 
-    - name: Pinguj drugą maszynę
-      shell: |
-        if [ "{{ inventory_hostname }}" == "{{ vm1_name }}" ]; then
-          ping -c 2 {{ hostvars[vm2_name].ansible_host }}
-        else
-          ping -c 2 {{ hostvars[vm1_name].ansible_host }}
-        fi
+    - name: Pinguj vm2 z vm1
+      shell: ping -c 2 {{ hostvars[vm2_name].ansible_host }}
       register: ping_output
+      when: inventory_hostname == vm1_name
       ignore_errors: true
 
-    - name: Pokaż wynik pinga VM↔VM
+    - name: Pokaż wynik pinga vm1 -> vm2
       debug:
         var: ping_output.stdout_lines
+      when: inventory_hostname == vm1_name and ping_output is defined
+
+    - name: Pinguj vm1 z vm2
+      shell: ping -c 2 {{ hostvars[vm1_name].ansible_host }}
+      register: ping_output
+      when: inventory_hostname == vm2_name
+      ignore_errors: true
+
+    - name: Pokaż wynik pinga vm2 -> vm1
+      debug:
+        var: ping_output.stdout_lines
+      when: inventory_hostname == vm2_name and ping_output is defined
 
     - name: Sprawdź dostęp do internetu (ping 8.8.8.8)
       shell: ping -c 2 8.8.8.8
@@ -131,3 +126,12 @@
     - name: Pokaż wynik pinga do hosta
       debug:
         var: host_ping.stdout_lines
+
+    - name: Sprawdź próbę dostępu do urządzenia w sieci hosta
+      shell: ping -c 2 {{ external_test_ip }}
+      register: external_ping
+      ignore_errors: true
+
+    - name: Pokaż wynik pinga do sieci hosta
+      debug:
+        var: external_ping.stdout_lines

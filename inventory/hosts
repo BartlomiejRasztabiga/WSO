@@ -1,2 +1,10 @@
 [local]
 localhost ansible_connection=local
+# BEGIN DYNAMIC INVENTORY FOR vm1
+[dynamic_vms]
+vm1 ansible_host=192.168.100.190 ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+# END DYNAMIC INVENTORY FOR vm1
+# BEGIN DYNAMIC INVENTORY FOR vm2
+[dynamic_vms]
+vm2 ansible_host=192.168.100.148 ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+# END DYNAMIC INVENTORY FOR vm2

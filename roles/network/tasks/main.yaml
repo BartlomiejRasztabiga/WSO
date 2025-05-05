@@ -1,0 +1,28 @@
+- name: Sprawdź czy sieć {{ vm_network }} już istnieje
+  command: virsh net-info {{ vm_network }}
+  register: net_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Pomiń tworzenie sieci jeśli już istnieje
+  debug:
+    msg: "Sieć {{ vm_network }} już istnieje – pomijam tworzenie."
+  when: net_check.rc == 0
+
+- name: Wygeneruj XML sieci NAT
+  template:
+    src: network-nat.xml.j2
+    dest: "/tmp/{{ vm_network }}.xml"
+  when: net_check.rc != 0
+
+- name: Zdefiniuj nową sieć NAT
+  command: virsh net-define /tmp/{{ vm_network }}.xml
+  when: net_check.rc != 0
+
+- name: Włącz autostart sieci
+  command: virsh net-autostart {{ vm_network }}
+  when: net_check.rc != 0
+
+- name: Uruchom sieć
+  command: virsh net-start {{ vm_network }}
+  when: net_check.rc != 0
