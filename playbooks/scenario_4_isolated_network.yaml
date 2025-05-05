@@ -1,15 +1,16 @@
-- name: "Scenariusz 2: Tworzenie dwóch VM w NAT"
+---
+- name: "Scenariusz 4: Izolowana sieć dla dwóch VM"
   hosts: localhost
   become: true
   vars_files:
-    - ../vars/scenario_2.yaml
+    - ../vars/scenario_4.yaml
 
   tasks:
-    - name: Tworzenie sieci NAT (rola network)
+    - name: Tworzenie sieci isolated (rola network)
       include_role:
         name: network
 
-    - name: Utwórz vm1
+    - name: Tworzenie vm1
       include_role:
         name: vm
       vars:
@@ -17,7 +18,7 @@
         vm_disk: "{{ vm1_disk }}"
         vm_ci_iso: "{{ vm1_ci_iso }}"
 
-    - name: Utwórz vm2
+    - name: Tworzenie vm2
       include_role:
         name: vm
       vars:
@@ -61,7 +62,7 @@
   hosts: dynamic_vms
   become: true
   vars_files:
-    - ../vars/scenario_2.yaml
+    - ../vars/scenario_4.yaml
 
   tasks:
     - name: Ping test do localhost (czy SSH działa)

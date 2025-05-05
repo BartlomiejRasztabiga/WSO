@@ -22,9 +22,12 @@ case "$SCENARIO" in
   3)
     ansible-playbook $BECOME_OPT "$PLAYBOOK_DIR/scenario_3_two_vms_bridge.yaml"
     ;;
+  4)
+    ansible-playbook $BECOME_OPT "$PLAYBOOK_DIR/scenario_4_isolated_network.yaml"
+    ;;
   *)
     echo "Nieznany scenariusz: $SCENARIO"
-    echo "Dostępne: 1, 2, 3"
+    echo "Dostępne: 1, 2, 3, 4"
     exit 1
     ;;
 esac

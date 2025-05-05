@@ -72,10 +72,6 @@
     - name: Ping test
       ping:
 
-    - name: Wyświetl hostname
-      command: hostname
-      register: hostname_out
-
     - name: Pinguj vm2 z vm1
       shell: ping -c 2 {{ hostvars[vm2_name].ansible_host }}
       register: ping_output
