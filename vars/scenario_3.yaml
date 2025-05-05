@@ -12,11 +12,11 @@ vm_image_url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudim
 
 vm_memory: 2048
 vm_vcpus: 2
-vm_network: wso-nat
+vm_network: br0
 vm_os_variant: ubuntu22.04
 
 ssh_public_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
 
 external_test_ip: 192.168.0.1
 
-network_mode: nat
+network_mode: bridge
