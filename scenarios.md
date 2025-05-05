@@ -1,3 +1,5 @@
+⸻
+
 Zestaw scenariuszy testowych dla projektu (zgodny z koncepcją)
 
 Scenariusz 1: Tworzenie pojedynczej VM
@@ -33,9 +35,20 @@ Zakres:
 
 ⸻
 
-TODO scenariusz na isolated?
+Scenariusz 4: Sieć isolated
 
-Scenariusz 4: Statyczna konfiguracja IP
+Cel: Przetestować całkowicie odizolowaną sieć (brak dostępu z/na zewnątrz).
+Zakres:
+	•	Własna sieć libvirt typu isolated
+	•	2 VM z adresacją przez dnsmasq
+	•	Brak połączenia z hostem i Internetem
+	•	Testy:
+	•	✅ ping między VM
+	•	🚫 ping do hosta lub Internetu
+	•	🚫 curl localhost:... z VM
+
+
+Scenariusz 5: Statyczna konfiguracja IP
 
 Cel: Przetestować działanie statycznej adresacji IP przez cloud-init.
 Zakres:
@@ -45,7 +58,7 @@ Zakres:
 
 ⸻
 
-Scenariusz 5: NAT + port forwarding
+Scenariusz 6: NAT + port forwarding
 
 Cel: Umożliwić dostęp do VM z hosta mimo NAT.
 Zakres:
@@ -56,7 +69,7 @@ Zakres:
 
 ⸻
 
-Scenariusz 6: Filtrowanie ruchu (firewall)
+Scenariusz 7: Filtrowanie ruchu (firewall)
 
 Cel: Zablokować lub zezwolić na wybrane typy połączeń między VM.
 Zakres:
