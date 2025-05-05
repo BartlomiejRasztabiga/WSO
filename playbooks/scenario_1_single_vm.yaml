@@ -1,4 +1,4 @@
-- name: Scenariusz 1: Tworzenie jednej VM i provisioning
+- name: "Scenariusz 1: Tworzenie jednej VM i provisioning"
   hosts: localhost
   become: true
   vars_files:
@@ -19,15 +19,15 @@
         ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
         groups: dynamic_vms
 
-    - name: Dopisz VM do inventory/hosts
-      blockinfile:
-        path: "{{ playbook_dir }}/../inventory/hosts"
-        marker: "# {mark} DYNAMIC INVENTORY FOR {{ vm_name }}"
-        block: |
-          [dynamic_vms]
-          {{ vm_name }} ansible_host={{ vm_ip_result.stdout }} ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+    # - name: Dopisz VM do inventory/hosts
+    #   blockinfile:
+    #     path: "{{ playbook_dir }}/../inventory/hosts"
+    #     marker: "# {mark} DYNAMIC INVENTORY FOR {{ vm_name }}"
+    #     block: |
+    #       [dynamic_vms]
+    #       {{ vm_name }} ansible_host={{ vm_ip_result.stdout }} ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 
-- name: Provisioning: test dostępności i internetu
+- name: "Provisioning: test dostępności i internetu"
   hosts: dynamic_vms
   become: true
   tasks:

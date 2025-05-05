@@ -1,9 +1,9 @@
-- name: Usuwanie wszystkich VM zaczynających się od 'vm'
+- name: Usuwanie wszystkich VM
   hosts: localhost
   become: true
   tasks:
     - name: Pobierz listę VM
-      shell: virsh list --all --name | grep '^vm'
+      shell: virsh list --all --name
       register: vms
       changed_when: false
 
@@ -20,6 +20,27 @@
     - name: Usuń ISO z cloud-init
       file:
         path: "/var/lib/libvirt/images/{{ item }}-seed.iso"
+        state: absent
+      loop: "{{ vms.stdout_lines }}"
+      ignore_errors: true
+    
+    - name: Usuń dysk VM
+      file:
+        path: "/var/lib/libvirt/images/{{ item }}.qcow2"
+        state: absent
+      loop: "{{ vms.stdout_lines }}"
+      ignore_errors: true
+
+    - name: Usuń tymczasowy user-data
+      file:
+        path: "/tmp/{{ item }}-user-data"
+        state: absent
+      loop: "{{ vms.stdout_lines }}"
+      ignore_errors: true
+
+    - name: Usuń tymczasowy meta-data
+      file:
+        path: "/tmp/{{ item }}-meta-data"
         state: absent
       loop: "{{ vms.stdout_lines }}"
       ignore_errors: true
