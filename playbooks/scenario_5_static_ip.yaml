@@ -1,0 +1,67 @@
+- name: "Scenariusz 5: Statyczne IP w NAT (nat0)"
+  hosts: localhost
+  become: true
+  vars_files:
+    - ../vars/scenario_5.yaml
+
+  tasks:
+    - name: Utwórz sieć NAT (rola network)
+      include_role:
+        name: network
+
+    - name: Tworzenie VM ze statycznym IP
+      include_role:
+        name: vm
+      vars:
+        user_data_template: user-data-static-ip.j2
+
+    - name: Czekaj aż VM odpowie na SSH
+      wait_for:
+        host: "{{ vm_static_ip }}"
+        port: 22
+        timeout: 60
+
+    - name: Dodaj VM do inventory
+      add_host:
+        name: "{{ vm_name }}"
+        ansible_host: "{{ vm_static_ip }}"
+        ansible_user: ubuntu
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+        groups: dynamic_vms
+
+- name: "Test: statyczne IP i Internet w nat0"
+  hosts: dynamic_vms
+  become: true
+  vars_files:
+    - ../vars/scenario_5.yaml
+  tasks:
+    - name: Ping test do localhost (czy SSH działa)
+      ping:
+
+    - name: Pobierz IP interfejsu enp1s0
+      command: ip -o -4 addr show dev enp1s0
+      register: enp1s0_ip
+      changed_when: false
+
+    - name: Pokaż IP z enp1s0
+      debug:
+        var: enp1s0_ip.stdout_lines
+
+    - name: "Asercja: VM ma poprawny adres IP"
+      assert:
+        that:
+          - "'{{ vm_static_ip }}' in enp1s0_ip.stdout"
+        fail_msg: "❌ VM NIE ma przypisanego adresu {{ vm_static_ip }}!"
+        success_msg: "✅ VM ma przypisany poprawny adres IP: {{ vm_static_ip }}"
+
+
+    # TODO: VM ma 2 adresy
+
+    - name: Sprawdź dostęp do internetu (ping 8.8.8.8)
+      shell: ping -c 2 8.8.8.8
+      register: internet_ping
+      ignore_errors: true
+
+    - name: Pokaż wynik pinga do internetu
+      debug:
+        var: internet_ping.stdout_lines

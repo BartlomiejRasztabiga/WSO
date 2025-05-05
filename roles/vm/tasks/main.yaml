@@ -23,9 +23,9 @@
     creates: "{{ vm_disk }}"
   when: vm_check.rc != 0
 
-- name: Render user-data
+- name: Render user-data (z szablonu)
   template:
-    src: user-data
+    src: "{{ user_data_template | default('user-data') }}"
     dest: "/tmp/{{ vm_name }}-user-data"
   when: vm_check.rc != 0
 
