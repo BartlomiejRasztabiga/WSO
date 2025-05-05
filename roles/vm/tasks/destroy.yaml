@@ -1,0 +1,27 @@
+- name: Wyłącz VM jeśli działa
+  command: virsh destroy {{ vm_name }}
+  ignore_errors: true
+
+- name: Usuń definicję VM z libvirt
+  command: virsh undefine {{ vm_name }} --remove-all-storage
+  ignore_errors: true
+
+- name: Usuń cloud-init ISO
+  file:
+    path: "{{ vm_ci_iso }}"
+    state: absent
+
+- name: Usuń dysk VM
+  file:
+    path: "{{ vm_disk }}"
+    state: absent
+
+- name: Usuń tymczasowy user-data
+  file:
+    path: "/tmp/{{ vm_name }}-user-data"
+    state: absent
+
+- name: Usuń tymczasowy meta-data
+  file:
+    path: "/tmp/{{ vm_name }}-meta-data"
+    state: absent

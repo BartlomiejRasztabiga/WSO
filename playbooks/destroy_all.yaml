@@ -1,0 +1,25 @@
+- name: Usuwanie wszystkich VM zaczynających się od 'vm'
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Pobierz listę VM
+      shell: virsh list --all --name | grep '^vm'
+      register: vms
+      changed_when: false
+
+    - name: Zatrzymaj VM
+      command: "virsh destroy {{ item }}"
+      loop: "{{ vms.stdout_lines }}"
+      ignore_errors: true
+
+    - name: Undefine VM i usuń storage
+      command: "virsh undefine {{ item }} --remove-all-storage"
+      loop: "{{ vms.stdout_lines }}"
+      ignore_errors: true
+
+    - name: Usuń ISO z cloud-init
+      file:
+        path: "/var/lib/libvirt/images/{{ item }}-seed.iso"
+        state: absent
+      loop: "{{ vms.stdout_lines }}"
+      ignore_errors: true

@@ -1,0 +1,47 @@
+- name: Scenariusz 1: Tworzenie jednej VM i provisioning
+  hosts: localhost
+  become: true
+  vars_files:
+    - ../vars/scenario_1.yaml
+  roles:
+    - vm
+  tasks:
+    - name: Pobierz adres IP nowej VM
+      shell: virsh domifaddr {{ vm_name }} | grep -oP '(\d{1,3}\.){3}\d{1,3}' | head -n1
+      register: vm_ip_result
+      changed_when: false
+
+    - name: Dodaj VM dynamicznie do inventory
+      add_host:
+        name: "{{ vm_name }}"
+        ansible_host: "{{ vm_ip_result.stdout }}"
+        ansible_user: ubuntu
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+        groups: dynamic_vms
+
+    - name: Dopisz VM do inventory/hosts
+      blockinfile:
+        path: "{{ playbook_dir }}/../inventory/hosts"
+        marker: "# {mark} DYNAMIC INVENTORY FOR {{ vm_name }}"
+        block: |
+          [dynamic_vms]
+          {{ vm_name }} ansible_host={{ vm_ip_result.stdout }} ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+
+- name: Provisioning: test dostępności i internetu
+  hosts: dynamic_vms
+  become: true
+  tasks:
+    - name: Ping test
+      ping:
+
+    - name: Test ping do Internetu
+      shell: ping -c 2 8.8.8.8
+      register: internet_ping
+      ignore_errors: true
+
+    - debug:
+        var: internet_ping.stdout_lines
+
+    - name: apt update
+      apt:
+        update_cache: yes

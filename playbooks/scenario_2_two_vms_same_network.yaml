@@ -1,0 +1,133 @@
+---
+- name: Scenariusz 2: Tworzenie dwóch VM w NAT
+  hosts: localhost
+  become: true
+  vars_files:
+    - ../vars/scenario_2.yaml
+
+  tasks:
+    - name: Sprawdź czy sieć {{ vm_network }} już istnieje
+      shell: virsh net-info {{ vm_network }}
+      register: net_check
+      ignore_errors: true
+      changed_when: false
+
+    - name: Zatrzymaj i usuń istniejącą sieć {{ vm_network }}
+      shell: |
+        virsh net-destroy {{ vm_network }} && virsh net-undefine {{ vm_network }}
+      when: net_check.rc == 0
+      ignore_errors: true
+
+    - name: Wygeneruj XML sieci NAT
+      template:
+        src: network-nat.xml.j2
+        dest: "/tmp/{{ vm_network }}.xml"
+
+    - name: Zdefiniuj nową sieć NAT
+      command: virsh net-define /tmp/{{ vm_network }}.xml
+
+    - name: Włącz autostart sieci
+      command: virsh net-autostart {{ vm_network }}
+
+    - name: Uruchom sieć
+      command: virsh net-start {{ vm_network }}
+    - name: Utwórz vm1
+      include_role:
+        name: vm
+      vars:
+        vm_name: "{{ vm1_name }}"
+        vm_disk: "{{ vm1_disk }}"
+        vm_ci_iso: "{{ vm1_ci_iso }}"
+
+    - name: Utwórz vm2
+      include_role:
+        name: vm
+      vars:
+        vm_name: "{{ vm2_name }}"
+        vm_disk: "{{ vm2_disk }}"
+        vm_ci_iso: "{{ vm2_ci_iso }}"
+
+    - name: Pobierz IP vm1
+      shell: virsh domifaddr {{ vm1_name }} | grep -oP '(\d{1,3}\.){3}\d{1,3}' | head -n1
+      register: vm1_ip_result
+      changed_when: false
+
+    - name: Pobierz IP vm2
+      shell: virsh domifaddr {{ vm2_name }} | grep -oP '(\d{1,3}\.){3}\d{1,3}' | head -n1
+      register: vm2_ip_result
+      changed_when: false
+
+    - name: Dodaj vm1 do inventory
+      add_host:
+        name: "{{ vm1_name }}"
+        ansible_host: "{{ vm1_ip_result.stdout }}"
+        ansible_user: ubuntu
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+        groups: dynamic_vms
+
+    - name: Dodaj vm2 do inventory
+      add_host:
+        name: "{{ vm2_name }}"
+        ansible_host: "{{ vm2_ip_result.stdout }}"
+        ansible_user: ubuntu
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+        groups: dynamic_vms
+
+    - name: Dopisz vm1 do inventory/hosts
+      blockinfile:
+        path: "{{ playbook_dir }}/../inventory/hosts"
+        marker: "# {mark} DYNAMIC INVENTORY FOR {{ vm1_name }}"
+        block: |
+          [dynamic_vms]
+          {{ vm1_name }} ansible_host={{ vm1_ip_result.stdout }} ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+
+    - name: Dopisz vm2 do inventory/hosts
+      blockinfile:
+        path: "{{ playbook_dir }}/../inventory/hosts"
+        marker: "# {mark} DYNAMIC INVENTORY FOR {{ vm2_name }}"
+        block: |
+          [dynamic_vms]
+          {{ vm2_name }} ansible_host={{ vm2_ip_result.stdout }} ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+
+- name: Provisioning i test komunikacji
+  hosts: dynamic_vms
+  become: true
+  tasks:
+    - name: Ping test do localhost (czy SSH działa)
+      ping:
+
+    - name: Wyświetl hostname
+      command: hostname
+      register: hostname_out
+
+    - name: Pinguj drugą maszynę
+      shell: |
+        if [ "{{ inventory_hostname }}" == "{{ vm1_name }}" ]; then
+          ping -c 2 {{ hostvars[vm2_name].ansible_host }}
+        else
+          ping -c 2 {{ hostvars[vm1_name].ansible_host }}
+        fi
+      register: ping_output
+      ignore_errors: true
+
+    - name: Pokaż wynik pinga VM↔VM
+      debug:
+        var: ping_output.stdout_lines
+
+    - name: Sprawdź dostęp do internetu (ping 8.8.8.8)
+      shell: ping -c 2 8.8.8.8
+      register: internet_ping
+      ignore_errors: true
+
+    - name: Pokaż wynik pinga do internetu
+      debug:
+        var: internet_ping.stdout_lines
+
+    - name: Sprawdź próbę dostępu do hosta (brama domyślna)
+      shell: ip route | grep default | awk '{print $3}' | xargs -I {} ping -c 2 {}
+      register: host_ping
+      ignore_errors: true
+
+    - name: Pokaż wynik pinga do hosta
+      debug:
+        var: host_ping.stdout_lines
