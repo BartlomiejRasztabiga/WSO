@@ -2,13 +2,13 @@
 localhost ansible_connection=local
 # BEGIN DYNAMIC INVENTORY FOR VM test-vm-1
 [dynamic_vms]
-test-vm-1 ansible_host=192.168.122.23 ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+test-vm-1 ansible_host=192.168.122.232 ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 # END DYNAMIC INVENTORY FOR VM test-vm-1
 # BEGIN DYNAMIC INVENTORY FOR VM test-vm-2
 [dynamic_vms]
-test-vm-2 ansible_host=192.168.122.187 ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+test-vm-2 ansible_host=192.168.122.115 ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 # END DYNAMIC INVENTORY FOR VM test-vm-2
 # BEGIN DYNAMIC INVENTORY FOR VM test-vm-3
 [dynamic_vms]
-test-vm-3 ansible_host=192.168.122.140 ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+test-vm-3 ansible_host=192.168.122.143 ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
 # END DYNAMIC INVENTORY FOR VM test-vm-3
