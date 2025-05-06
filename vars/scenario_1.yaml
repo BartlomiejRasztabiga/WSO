@@ -8,3 +8,4 @@ vm_ci_iso: /var/lib/libvirt/images/vm1-seed.iso
 vm_network: default
 vm_os_variant: ubuntu22.04
 ssh_public_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+bridge_host_ip: 192.168.0.19

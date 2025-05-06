@@ -1,23 +1,16 @@
 vm1_name: vm1
 vm2_name: vm2
-
 vm1_disk: /var/lib/libvirt/images/vm1.qcow2
 vm2_disk: /var/lib/libvirt/images/vm2.qcow2
-
 vm1_ci_iso: /var/lib/libvirt/images/vm1-seed.iso
 vm2_ci_iso: /var/lib/libvirt/images/vm2-seed.iso
-
 vm_base_image: /var/lib/libvirt/images/ubuntu-jammy-base.qcow2
 vm_image_url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img
-
 vm_memory: 2048
 vm_vcpus: 2
 vm_network: is0
 vm_os_variant: ubuntu22.04
-
 ssh_public_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
-
 external_test_ip: 192.168.0.1
-
 network_mode: isolated
 bridge_host_ip: 192.168.0.19
