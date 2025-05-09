@@ -1,5 +1,5 @@
 - name: Sprawdź czy sieć {{ vm_network }} już istnieje
-  command: virsh net-info {{ vm_network }}
+  shell: virsh net-info {{ vm_network }}
   register: net_check
   ignore_errors: true
   changed_when: false
@@ -30,51 +30,4 @@
 
 - name: Uruchom sieć
   command: virsh net-start {{ vm_network }}
-  when: net_check.rc != 0
-
-- name: Sprawdź czy sieć {{ vm_network }} istnieje
-  shell: virsh net-info {{ vm_network }}
-  register: net_check
-  ignore_errors: true
-  changed_when: false
-
-- name: Zdefiniuj sieć NAT z port forwarding jeśli nie istnieje
-  template:
-    src: nat-port-forwarding.xml.j2
-    dest: "/etc/libvirt/qemu/networks/{{ vm_network }}.xml"
-  when: net_check.rc != 0
-
-- name: Zdefiniuj sieć w libvirt
-  command: virsh net-define /etc/libvirt/qemu/networks/{{ vm_network }}.xml
-  when: net_check.rc != 0
-
-- name: Uruchom sieć NAT z port forwarding
-  command: virsh net-start {{ vm_network }}
   when: net_check.rc != 0 or net_check.stdout.find('inactive') != -1
-
-- name: Tworzenie sieci NAT
-  command: >
-    virsh net-define /etc/libvirt/qemu/networks/{{ vm_network }}.xml
-  args:
-    creates: "/etc/libvirt/qemu/networks/{{ vm_network }}.xml"
-
-- name: Uruchom sieć NAT
-  command: virsh net-start {{ vm_network }}
-  when: nat_port_forwarding is not defined
-
-- name: Dodaj port forwarding do sieci NAT
-  block:
-    - name: Zatrzymaj sieć NAT
-      command: virsh net-destroy {{ vm_network }}
-
-    - name: Usuń istniejącą konfigurację NAT
-      command: virsh net-undefine {{ vm_network }}
-
-    - name: Renderuj konfigurację NAT z port forwarding
-      template:
-        src: nat-port-forwarding.xml.j2
-        dest: "/etc/libvirt/qemu/networks/{{ vm_network }}.xml"
-
-    - name: Uruchom sieć NAT z port forwarding
-      command: virsh net-start {{ vm_network }}
-  when: nat_port_forwarding is defined
