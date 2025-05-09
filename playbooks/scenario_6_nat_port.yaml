@@ -35,7 +35,7 @@
         groups: dynamic_vms
 
 - name: "Test: NAT + port forwarding"
-  hosts: dynamic_vms
+  hosts: localhost
   become: true
   vars_files:
     - ../vars/scenario_6.yaml
