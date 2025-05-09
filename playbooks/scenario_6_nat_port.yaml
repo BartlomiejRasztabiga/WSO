@@ -30,7 +30,7 @@
     - name: Dodaj VM do inventory
       add_host:
         name: "{{ vm_name }}"
-        ansible_host: "{{ vm1_ip_result.stdout }}"
+        ansible_host: "{{ vm_ip_result.stdout }}"
         ansible_user: ubuntu
         ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
         groups: dynamic_vms
