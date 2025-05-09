@@ -19,6 +19,16 @@
       vars:
         user_data_template: user-data-nat-port-forwarding.j2
 
+#
+    - name: Sprawdź czy port 2222 jest otwarty
+      shell: nc -zv localhost 2222
+      register: port_check
+      ignore_errors: true
+
+    - name: Pokaż wynik sprawdzenia portu
+      debug:
+        var: port_check.stdout_lines
+#
     - name: Czekaj aż VM odpowie na SSH
       wait_for:
         host: localhost
