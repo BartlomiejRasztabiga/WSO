@@ -1,0 +1,60 @@
+- name: "Scenariusz 6: NAT + port forwarding"
+  hosts: localhost
+  become: true
+  vars_files:
+    - ../vars/scenario_6.yaml
+
+  tasks:
+    - name: Utwórz sieć NAT z port forwarding (rola network)
+      include_role:
+        name: network
+      vars:
+        nat_port_forwarding:
+          - { host_port: 2222, guest_port: 22 }
+          - { host_port: 8080, guest_port: 80 }
+
+    - name: Tworzenie VM w NAT z port forwarding
+      include_role:
+        name: vm
+      vars:
+        user_data_template: user-data-nat-port-forwarding.j2
+
+    - name: Czekaj aż VM odpowie na SSH
+      wait_for:
+        host: localhost
+        port: 2222
+        timeout: 60
+
+    - name: Dodaj VM do inventory
+      add_host:
+        name: "{{ vm_name }}"
+        ansible_host: localhost
+        ansible_port: 2222
+        ansible_user: ubuntu
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+        groups: dynamic_vms
+
+- name: "Test: NAT + port forwarding"
+  hosts: dynamic_vms
+  become: true
+  vars_files:
+    - ../vars/scenario_6.yaml
+
+  tasks:
+    - name: Test SSH po forwarded port (2222 → 22)
+      shell: ssh -p 2222 localhost echo "SSH działa"
+      register: ssh_test
+      ignore_errors: true
+
+    - name: Pokaż wynik testu SSH
+      debug:
+        var: ssh_test.stdout_lines
+
+    - name: Test HTTP po forwarded port (8080 → 80)
+      shell: curl -s localhost:8080 || echo "Brak odpowiedzi HTTP"
+      register: http_test
+      ignore_errors: true
+
+    - name: Pokaż wynik testu HTTP
+      debug:
+        var: http_test.stdout_lines

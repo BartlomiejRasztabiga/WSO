@@ -28,6 +28,9 @@ case "$SCENARIO" in
   5)
     ansible-playbook $BECOME_OPT "$PLAYBOOK_DIR/scenario_5_static_ip.yaml"
     ;;
+  6) 
+    ansible-playbook $BECOME_OPT "$PLAYBOOK_DIR/scenario_6_nat_port.yaml"
+    ;;
   *)
     echo "Nieznany scenariusz: $SCENARIO"
     echo "Dostępne: 1, 2, 3, 4, 5"

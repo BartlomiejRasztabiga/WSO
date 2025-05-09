@@ -23,7 +23,7 @@
         state: absent
       loop: "{{ vms.stdout_lines }}"
       ignore_errors: true
-    
+
     - name: Usuń dysk VM
       file:
         path: "/var/lib/libvirt/images/{{ item }}.qcow2"
@@ -51,4 +51,5 @@
         virsh net-undefine {{ item }} || true
       loop:
         - nat0
+        - nat1
         - br0
