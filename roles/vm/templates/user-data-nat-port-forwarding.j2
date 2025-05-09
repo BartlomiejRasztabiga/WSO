@@ -2,3 +2,6 @@
 hostname: {{ vm_name }}
 ssh_authorized_keys:
   - "{{ ssh_public_key }}"
+
+runcmd:
+  - nohup python3 -m http.server 80 &
