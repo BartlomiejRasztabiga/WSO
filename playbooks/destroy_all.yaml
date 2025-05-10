@@ -51,6 +51,10 @@
         virsh net-undefine {{ item }} || true
       loop:
         - nat0
-        - nat1
         - br0
         - is0
+    
+    - name: Usuń wszystkie reguły DNAT (PREROUTING + OUTPUT)
+      shell: |
+        iptables -t nat -L PREROUTING --line-numbers | grep DNAT | awk '{print $1}' | sort -r | while read -r num; do sudo iptables -t nat -D PREROUTING $num; done
+        iptables -t nat -L OUTPUT --line-numbers | grep DNAT | awk '{print $1}' | sort -r | while read -r num; do sudo iptables -t nat -D OUTPUT $num; done

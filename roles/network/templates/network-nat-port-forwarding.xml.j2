@@ -7,11 +7,4 @@
       <range start='192.168.100.100' end='192.168.100.200'/>
     </dhcp>
   </ip>
-  {% for rule in nat_port_forwarding %}
-  <port redir='yes'>
-    <protocol>tcp</protocol>
-    <host port='{{ rule.host_port }}'/>
-    <guest port='{{ rule.guest_port }}'/>
-  </port>
-  {% endfor %}
 </network>

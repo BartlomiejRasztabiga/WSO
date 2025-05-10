@@ -8,10 +8,6 @@
     - name: Utwórz sieć NAT z port forwarding (rola network)
       include_role:
         name: network
-      vars:
-        nat_port_forwarding:
-          - { host_port: 2222, guest_port: 22 }
-          - { host_port: 8080, guest_port: 80 }
 
     - name: Tworzenie VM w NAT z port forwarding
       include_role:
@@ -35,6 +31,30 @@
         ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
         groups: dynamic_vms
 
+    - name: Dodaj reguły PREROUTING
+      ansible.builtin.command: >
+        iptables -t nat -A PREROUTING -p tcp -d {{ bridge_host_ip }} --dport {{ item.host_port }} -j DNAT --to-destination {{ vm_ip_result.stdout }}:{{ item.guest_port }}
+      loop: "{{ nat_port_forwarding }}"
+      when: vm_ip_result.stdout != ""
+    
+    - name: Dodaj reguły OUTPUT (ruch lokalny z hosta)
+      ansible.builtin.command: >
+        iptables -t nat -A OUTPUT -p tcp -d {{ bridge_host_ip }} --dport {{ item.host_port }} -j DNAT --to-destination {{ vm_ip_result.stdout }}:{{ item.guest_port }}
+      loop: "{{ nat_port_forwarding }}"
+      when: vm_ip_result.stdout != ""
+
+    - name: Zezwól na FORWARD do VM
+      ansible.builtin.command: >
+        iptables -I FORWARD -p tcp -d {{ vm_ip_result.stdout }} --dport {{ item.guest_port }} -j ACCEPT
+      loop: "{{ nat_port_forwarding }}"
+      when: vm_ip_result.stdout != ""
+
+    - name: Zezwól na FORWARD odpowiedzi (conntrack)
+      ansible.builtin.command: >
+        iptables -I FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+      when: vm_ip_result.stdout != ""
+
+
 - name: "Test: NAT + port forwarding"
   hosts: localhost
   become: true
@@ -43,7 +63,9 @@
 
   tasks:
     - name: Sprawdź dostęp do SSH na hoście (port 2222)
-      shell: ssh -p 2222 localhost echo "SSH działa"
+      shell: >
+        sshpass -p 'ubuntu'
+        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 ubuntu@{{ bridge_host_ip }}  echo "SSH działa" || echo "Brak odpowiedzi SSH"
       register: ssh_test
       ignore_errors: true
 
@@ -52,7 +74,7 @@
         var: ssh_test.stdout_lines
 
     - name: Sprawdź dostęp do HTTP na hoście (port 8080)
-      shell: curl -s localhost:8080 || echo "Brak odpowiedzi HTTP"
+      shell: curl -s http://{{ bridge_host_ip }}:8080 || echo "Brak odpowiedzi HTTP"
       register: http_test
       ignore_errors: true
 
