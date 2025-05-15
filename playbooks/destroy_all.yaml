@@ -53,8 +53,6 @@
         - nat0
         - br0
         - is0
-        - nat_network
-        - fir1
 
     - name: Usuń wszystkie reguły DNAT (PREROUTING + OUTPUT)
       shell: |

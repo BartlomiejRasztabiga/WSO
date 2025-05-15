@@ -14,4 +14,3 @@ chpasswd:
   expire: false
 runcmd:
   - timeout 30s bash -c "while true; do ping -c 1 {{bridge_host_ip}} || true; sleep 1; done"
-  - apt-get update && apt-get install -y nmap

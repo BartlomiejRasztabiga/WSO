@@ -2,19 +2,16 @@
 hostname: {{ vm_name }}
 users:
   - name: ubuntu
-    sudo: ALL=(ALL) NOPASSWD:ALL
     groups: sudo
     shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
     ssh_authorized_keys:
       - {{ ssh_public_key }}
     plain_text_passwd: "ubuntu"
     lock_passwd: false
     passwd: "{{ 'ubuntu' | password_hash('sha512') }}"
-
 ssh_pwauth: true
-
 chpasswd:
   expire: false
-
 runcmd:
-  - nohup python3 -m http.server 80 &~
+  - nohup python3 -m http.server 80 &

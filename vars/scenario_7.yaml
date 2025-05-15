@@ -1,5 +1,3 @@
-vm_network: fir1
-network_mode: nat
 vm1_name: vm1
 vm2_name: vm2
 vm1_disk: /var/lib/libvirt/images/vm1.qcow2
@@ -10,6 +8,8 @@ vm_base_image: /var/lib/libvirt/images/ubuntu-jammy-base.qcow2
 vm_image_url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img
 vm_memory: 2048
 vm_vcpus: 2
-ssh_public_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
-bridge_host_ip: 192.168.0.19
+vm_network: nat0
 vm_os_variant: ubuntu22.04
+ssh_public_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+network_mode: nat
+bridge_host_ip: 192.168.0.19
