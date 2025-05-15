@@ -1,0 +1,93 @@
+- name: "Scenariusz 7: Firewall Configuration"
+  hosts: localhost
+  become: true
+  vars_files:
+    - ../vars/scenario_7.yaml
+
+  tasks:
+    - name: Utwórz sieć NAT dla VM
+      include_role:
+        name: network
+
+    - name: Tworzenie pierwszej VM
+      include_role:
+        name: vm
+      vars:
+        vm_name: "{{ vm1_name }}"
+        vm_disk: "{{ vm1_disk }}"
+        vm_ci_iso: "{{ vm1_ci_iso }}"
+
+    - name: Tworzenie drugiej VM
+      include_role:
+        name: vm
+      vars:
+        vm_name: "{{ vm2_name }}"
+        vm_disk: "{{ vm2_disk }}"
+        vm_ci_iso: "{{ vm2_ci_iso }}"
+
+    - name: Pobierz IP pierwszej VM
+      shell: virsh domifaddr {{ vm1_name }} | grep -oP '(\d{1,3}\.){3}\d{1,3}' | head -n1
+      register: vm1_ip_result
+      retries: 10
+      delay: 3
+      until: vm1_ip_result.stdout != ""
+      changed_when: false
+
+    - name: Pobierz IP drugiej VM
+      shell: virsh domifaddr {{ vm2_name }} | grep -oP '(\d{1,3}\.){3}\d{1,3}' | head -n1
+      register: vm2_ip_result
+      retries: 10
+      delay: 3
+      until: vm2_ip_result.stdout != ""
+      changed_when: false
+
+    - name: Dodaj VM do inventory
+      add_host:
+        name: "{{ item }}"
+        ansible_host: "{{ lookup('vars', item + '_ip_result').stdout }}"
+        ansible_user: ubuntu
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+        groups: dynamic_vms
+      loop:
+        - vm1
+        - vm2
+
+    - name: Konfiguracja reguł zapory
+      include_role:
+        name: firewall
+
+    - name: Testuj dostęp do portu 22 (SSH) na drugiej VM
+      shell: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 22 ubuntu@{{ vm2_ip_result.stdout }} echo "SSH działa" || echo "Brak odpowiedzi SSH"
+      register: ssh_test
+      ignore_errors: true
+
+    - name: Pokaż wynik testu SSH
+      debug:
+        var: ssh_test.stdout_lines
+
+    - name: Testuj dostęp do portu 80 (HTTP) na drugiej VM
+      shell: curl -s http://{{ vm2_ip_result.stdout }} || echo "Brak odpowiedzi HTTP"
+      register: http_test
+      ignore_errors: true
+
+    - name: Pokaż wynik testu HTTP
+      debug:
+        var: http_test.stdout_lines
+
+    - name: Testuj ping do drugiej VM
+      shell: ping -c 3 {{ vm2_ip_result.stdout }} || echo "Brak odpowiedzi ping"
+      register: ping_test
+      ignore_errors: true
+
+    - name: Pokaż wynik testu ping
+      debug:
+        var: ping_test.stdout_lines
+
+    - name: Testuj dostęp do portów za pomocą nmap
+      shell: nmap -p 22,80 {{ vm2_ip_result.stdout }}
+      register: nmap_test
+      ignore_errors: true
+
+    - name: Pokaż wynik testu nmap
+      debug:
+        var: nmap_test.stdout_lines

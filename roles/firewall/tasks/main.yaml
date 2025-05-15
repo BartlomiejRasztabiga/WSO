@@ -1,0 +1,11 @@
+- name: Blokuj ruch ICMP (ping)
+  ansible.builtin.command: iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
+
+- name: Blokuj wszystkie inne połączenia
+  ansible.builtin.command: iptables -A INPUT -j DROP
+
+- name: Zezwól na ruch na porcie 22 (SSH)
+  ansible.builtin.command: iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+- name: Zezwól na ruch na porcie 80 (HTTP)
+  ansible.builtin.command: iptables -A INPUT -p tcp --dport 80 -j ACCEPT
