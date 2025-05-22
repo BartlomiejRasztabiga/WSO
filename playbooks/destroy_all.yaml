@@ -51,6 +51,7 @@
         virsh net-undefine {{ item }} || true
       loop:
         - nat0
+        - nat1
         - br0
         - is0
 
