@@ -34,6 +34,14 @@
       until: vm1_ip_result.stdout != ""
       changed_when: false
 
+    - name: Poczekaj aż port SSH (22) będzie otwarty
+      wait_for:
+        host: "{{ vm1_ip_result.stdout }}"
+        port: 22
+        delay: 5
+        timeout: 120
+        state: started
+
     - name: Pobierz IP vm2
       shell: virsh domifaddr {{ vm2_name }} | grep -oP '(\d{1,3}\.){3}\d{1,3}' | head -n1
       register: vm2_ip_result
@@ -41,6 +49,14 @@
       delay: 3
       until: vm2_ip_result.stdout != ""
       changed_when: false
+
+    - name: Poczekaj aż port SSH (22) będzie otwarty
+      wait_for:
+        host: "{{ vm2_ip_result.stdout }}"
+        port: 22
+        delay: 5
+        timeout: 120
+        state: started
 
     - name: Dodaj vm1 do inventory
       add_host:

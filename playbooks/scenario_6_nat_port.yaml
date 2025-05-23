@@ -23,6 +23,14 @@
       until: vm_ip_result.stdout != ""
       changed_when: false
 
+    - name: Poczekaj aż port SSH (22) będzie otwarty
+      wait_for:
+        host: "{{ vm_ip_result.stdout }}"
+        port: 22
+        delay: 5
+        timeout: 120
+        state: started
+
     - name: Dodaj VM do inventory
       add_host:
         name: "{{ vm_name }}"

@@ -103,12 +103,12 @@
       debug:
         var: internet_ping.stdout_lines
 
-    - name: Sprawdź próbę dostępu do hosta (brama domyślna)
+    - name: Sprawdź próbę dostępu do sieci hosta (brama domyślna)
       shell: ip route | grep default | awk '{print $3}' | xargs -I {} ping -c 2 {}
       register: host_ping
       ignore_errors: true
 
-    - name: Pokaż wynik pinga do hosta
+    - name: Pokaż wynik pinga do sieci hosta
       debug:
         var: host_ping.stdout_lines
 

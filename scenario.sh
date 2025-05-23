@@ -2,6 +2,14 @@
 
 set -e
 
+# Start SSH agent if not already running
+if [ -z "$SSH_AUTH_SOCK" ]; then
+  eval "$(ssh-agent -s)"
+fi
+
+# Add SSH keys (adjust the path if needed)
+ssh-add ~/.ssh/id_ed25519
+
 SCENARIO=$1
 
 if [[ -z "$SCENARIO" ]]; then
