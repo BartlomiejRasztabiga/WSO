@@ -128,6 +128,17 @@
         var: http_test.stdout_lines
       when: inventory_hostname == vm1_name
 
+    - name: Testuj dostęp do portu 8080 (blokowany)
+      shell: curl -m 5 {{ hostvars[vm2_name].ansible_host }}:8080
+      register: http_8080_test
+      when: inventory_hostname == vm1_name
+      ignore_errors: true
+
+    - name: Pokaż wynik testu HTTP 8080
+      debug:
+        var: http_8080_test.stdout_lines
+      when: inventory_hostname == vm1_name
+
     - name: Testuj ping do drugiej VM
       shell: ping -c 3 {{ hostvars[vm2_name].ansible_host }}
       register: ping_test
@@ -140,7 +151,7 @@
       when: inventory_hostname == vm1_name
 
     - name: Testuj dostęp do portów za pomocą nmap
-      shell: nmap -p 22,80 {{ hostvars[vm2_name].ansible_host }}
+      shell: nmap -p 22,80,8080 {{ hostvars[vm2_name].ansible_host }}
       register: nmap_test
       when: inventory_hostname == vm1_name
       ignore_errors: true
