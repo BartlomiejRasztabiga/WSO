@@ -81,9 +81,6 @@
     - ../vars/scenario_4.yaml
 
   tasks:
-    - name: Ping test do localhost (czy SSH działa)
-      ping:
-
     - name: Pinguj vm2 z vm1
       shell: ping -c 2 {{ hostvars[vm2_name].ansible_host }}
       register: ping_output
