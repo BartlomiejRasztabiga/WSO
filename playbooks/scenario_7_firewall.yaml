@@ -87,7 +87,15 @@
         ufw allow 22
         ufw allow 80
         ufw --force enable
-
+    - name: Zablokowanie ruchu ICMP przez edycję /etc/ufw/before.rules
+      become: true
+      replace:
+        path: /etc/ufw/before.rules
+        regexp: '^(-A ufw-before-(input|forward) -p icmp --icmp-type (destination-unreachable|time-exceeded|parameter-problem|echo-request) -j ACCEPT)'
+        replace: '# \1'
+    - name: Przeładowanie firewalla
+      become: true
+      command: ufw reload
 
 - name: "Provisioning: test dostepnosci i test komunikacji"
   hosts: dynamic_vms
