@@ -35,9 +35,6 @@
   vars_files:
     - ../vars/scenario_5.yaml
   tasks:
-    - name: Ping test do localhost (czy SSH działa)
-      ping:
-
     - name: Pobierz IP interfejsu enp1s0
       command: ip -o -4 addr show dev enp1s0
       register: enp1s0_ip
@@ -53,9 +50,6 @@
           - "'{{ vm_static_ip }}' in enp1s0_ip.stdout"
         fail_msg: "❌ VM NIE ma przypisanego adresu {{ vm_static_ip }}!"
         success_msg: "✅ VM ma przypisany poprawny adres IP: {{ vm_static_ip }}"
-
-
-    # TODO: VM ma 2 adresy
 
     - name: Sprawdź dostęp do internetu (ping 8.8.8.8)
       shell: ping -c 2 8.8.8.8
