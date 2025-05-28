@@ -1,3 +1,0 @@
-- scenariusz 6
-- scenariusz 7
-- poprawic to ze czasem ssh failuje (bo za wczesnie) albo pyta o passphrase do kluczy kilka razy i sie blokuje
