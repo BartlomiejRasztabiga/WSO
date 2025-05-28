@@ -78,7 +78,7 @@
       when: inventory_hostname == vm1_name
       ignore_errors: true
 
-    - name: Pokaż wynik pinga vm1 -> vm2
+    - name: Pokaż wynik pinga vm2 -> vm1
       debug:
         var: ping_output.stdout_lines
       when: inventory_hostname == vm1_name and ping_output is defined
@@ -89,7 +89,7 @@
       when: inventory_hostname == vm2_name
       ignore_errors: true
 
-    - name: Pokaż wynik pinga vm2 -> vm1
+    - name: Pokaż wynik pinga vm1 -> vm2
       debug:
         var: ping_output.stdout_lines
       when: inventory_hostname == vm2_name and ping_output is defined
