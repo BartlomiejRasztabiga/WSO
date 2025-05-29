@@ -79,11 +79,3 @@ Zakres:
 	•	Test: ping, curl, nmap z drugiej VM
 
 ⸻
-
-✅ Format techniczny:
-	•	playbooks/scenario_*.yaml – każdy scenariusz osobno
-	•	vars/scenario_*.yaml – definicje VM, IP, sieci
-	•	roles/vm/ – wspólna logika tworzenia VM, provisioning, cloud-init
-	•	inventory/hosts – dynamicznie aktualizowane wpisy
-
-⸻
